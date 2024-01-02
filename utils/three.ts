@@ -156,7 +156,8 @@ const createControls = ({
   return controls;
 };
 
-const animate = ({
+// 애니메이션
+const animation = ({
   scene,
   renderer,
   camera,
@@ -170,7 +171,7 @@ const animate = ({
   callback?: () => void;
 }) => {
   requestAnimationFrame(() =>
-    animate({ scene, renderer, camera, controls, callback })
+    animation({ scene, renderer, camera, controls, callback })
   );
   const speed = 0.005;
   if (controls) {
@@ -221,7 +222,7 @@ export const renderCube = ({
     z: -3,
   });
 
-  animate({
+  animation({
     scene,
     renderer,
     camera,
@@ -271,7 +272,7 @@ export const renderSphere = ({
     z: 5,
   });
 
-  animate({
+  animation({
     scene,
     renderer,
     camera,
