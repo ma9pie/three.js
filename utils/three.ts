@@ -9,10 +9,11 @@ const addAmbientLight = ({
 }: {
   scene: THREE.Scene;
   color: string;
-  intensity: number;
+  intensity?: number;
 }) => {
   const light = new THREE.AmbientLight(color, intensity);
   scene.add(light);
+  return light;
 };
 
 // 직사광선 추가
@@ -27,7 +28,7 @@ const addDirectionalLight = ({
 }: {
   scene: THREE.Scene;
   color: string;
-  intensity: number;
+  intensity?: number;
   x: number;
   y: number;
   z: number;
@@ -42,6 +43,37 @@ const addDirectionalLight = ({
     const helper = new THREE.DirectionalLightHelper(light, 5);
     scene.add(helper);
   }
+  return light;
+};
+
+// 스포트라이트 생성
+const addSpotLight = ({
+  scene,
+  color,
+  intensity,
+  x,
+  y,
+  z,
+  showHelper,
+}: {
+  scene: THREE.Scene;
+  color: string;
+  intensity?: number;
+  x: number;
+  y: number;
+  z: number;
+  showHelper?: boolean;
+}) => {
+  const light = new THREE.SpotLight(color, intensity);
+  light.position.x = x;
+  light.position.y = y;
+  light.position.z = z;
+  scene.add(light);
+  if (showHelper) {
+    const helper = new THREE.CameraHelper(light.shadow.camera);
+    scene.add(helper);
+  }
+  return light;
 };
 
 // 렌더러 생성
@@ -124,33 +156,6 @@ const createControls = ({
   return controls;
 };
 
-const animate = ({
-  scene,
-  renderer,
-  camera,
-  mesh,
-  controls,
-}: {
-  scene: THREE.Scene;
-  renderer: THREE.WebGLRenderer;
-  camera: THREE.PerspectiveCamera;
-  mesh?: THREE.Mesh;
-  controls?: OrbitControls;
-}) => {
-  requestAnimationFrame(() =>
-    animate({ scene, renderer, camera, mesh, controls })
-  );
-  const speed = 0.005;
-  if (mesh) {
-    mesh.rotation.x += speed;
-    mesh.rotation.y += speed;
-  }
-  if (controls) {
-    controls.update();
-  }
-  renderer.render(scene, camera);
-};
-
 export const renderCube = ({
   id,
   width,
@@ -192,13 +197,15 @@ export const renderCube = ({
     z: -3,
   });
 
-  animate({
-    scene,
-    renderer,
-    camera,
-    mesh,
-    controls,
-  });
+  const animate = () => {
+    requestAnimationFrame(animate);
+    const speed = 0.005;
+    mesh.rotation.x += speed;
+    mesh.rotation.y += speed;
+    controls.update();
+    renderer.render(scene, camera);
+  };
+  animate();
 };
 
 export const renderSphere = ({
@@ -227,22 +234,24 @@ export const renderSphere = ({
   addAmbientLight({
     scene,
     color: '#ffffff',
-    intensity: 0.5,
+    intensity: 0.3,
   });
-  addDirectionalLight({
+  const spotLight = addSpotLight({
     scene,
     color: '#ffffff',
-    intensity: 2,
-    x: 1,
-    y: 2,
-    z: 3,
+    intensity: 100,
+    x: 5,
+    y: 5,
+    z: 5,
   });
 
-  animate({
-    scene,
-    renderer,
-    camera,
-    mesh,
-    controls,
-  });
+  const animate = () => {
+    requestAnimationFrame(animate);
+    const speed = Date.now() / 1000;
+    spotLight.position.x = 5 * Math.sin(speed);
+    spotLight.position.z = 5 * Math.cos(speed);
+    controls.update();
+    renderer.render(scene, camera);
+  };
+  animate();
 };

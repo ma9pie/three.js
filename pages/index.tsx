@@ -28,7 +28,7 @@ const Home = () => {
 export default Home;
 
 const Wrapper = styled.div`
-  ${tw`flex p-6`};
+  ${tw`flex flex-wrap p-6`};
 `;
 const Container = styled.div`
   ${tw`w-fit h-fit border border-solid border-neutral-500`};
