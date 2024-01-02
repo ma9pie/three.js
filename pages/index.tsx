@@ -1,20 +1,26 @@
 import React, { useEffect } from 'react';
 import tw, { styled } from 'twin.macro';
 
-import useThree from '@/hooks/useThree';
+import { renderCube, renderSphere } from '@/utils';
 
 const Home = () => {
-  const { renderCube } = useThree({
-    id: 'cube',
-  });
-
   useEffect(() => {
-    renderCube();
+    renderCube({
+      id: 'cube',
+      width: 720,
+      height: 720,
+    });
+    renderSphere({
+      id: 'sphere',
+      width: 720,
+      height: 720,
+    });
   }, []);
 
   return (
     <Wrapper>
-      <Three id="cube"></Three>
+      <Container id="cube"></Container>
+      <Container id="sphere"></Container>
     </Wrapper>
   );
 };
@@ -22,8 +28,8 @@ const Home = () => {
 export default Home;
 
 const Wrapper = styled.div`
-  ${tw`p-6`};
+  ${tw`flex p-6`};
 `;
-const Three = styled.div`
-  ${tw``};
+const Container = styled.div`
+  ${tw`w-fit h-fit border border-solid border-neutral-500`};
 `;
