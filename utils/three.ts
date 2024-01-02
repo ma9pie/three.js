@@ -8,7 +8,17 @@ interface Props {
 }
 
 // 필수 객체 생성
-const generate = ({ id, width, height }: Props) => {
+const generate = ({
+  id,
+  width,
+  height,
+  z = 3,
+}: {
+  id: string;
+  width: number;
+  height: number;
+  z?: number;
+}) => {
   const scene = new THREE.Scene();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -24,7 +34,7 @@ const generate = ({ id, width, height }: Props) => {
   }
 
   const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-  camera.position.z = 3;
+  camera.position.z = z;
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.minDistance = 1;
