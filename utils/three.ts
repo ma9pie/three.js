@@ -1,8 +1,59 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+interface Props {
+  id: string;
+  width: number;
+  height: number;
+}
+
+// 필수 객체 생성
+const generate = ({ id, width, height }: Props) => {
+  const scene = new THREE.Scene();
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(width, height);
+  const target = document.getElementById(id);
+  if (target) {
+    const firstChild = target?.firstChild;
+    if (target.childNodes.length > 0 && firstChild) {
+      target.removeChild(firstChild);
+    }
+    target.appendChild(renderer.domElement);
+  }
+  const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+  camera.position.z = 5;
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.minDistance = 1;
+  controls.maxDistance = 500;
+  return { scene, renderer, camera, controls };
+};
+
+// 애니메이션
+const animate = ({
+  scene,
+  renderer,
+  camera,
+  controls,
+  callback = () => {},
+}: {
+  scene: THREE.Scene;
+  renderer: THREE.WebGLRenderer;
+  camera: THREE.PerspectiveCamera;
+  controls?: OrbitControls;
+  callback?: () => void;
+}) => {
+  requestAnimationFrame(() =>
+    animate({ scene, renderer, camera, controls, callback })
+  );
+  if (controls) {
+    controls.update();
+  }
+  renderer.render(scene, camera);
+  callback();
+};
+
 // 주변광 추가
-const addAmbientLight = ({
+const createAmbientLight = ({
   scene,
   color,
   intensity,
@@ -17,7 +68,7 @@ const addAmbientLight = ({
 };
 
 // 직사광선 추가
-const addDirectionalLight = ({
+const createDirectionalLight = ({
   scene,
   color,
   intensity,
@@ -47,7 +98,7 @@ const addDirectionalLight = ({
 };
 
 // 스포트라이트 생성
-const addSpotLight = ({
+const createSpotLight = ({
   scene,
   color,
   intensity,
@@ -76,49 +127,21 @@ const addSpotLight = ({
   return light;
 };
 
-// 렌더러 생성
-const createRenderer = ({
-  id,
-  width,
-  height,
-}: {
-  id: string;
-  width: number;
-  height: number;
-}) => {
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(width, height);
-  const target = document.getElementById(id);
-  if (target) {
-    if (target.childNodes.length > 0) {
-      const firstChild = target.firstChild;
-      if (firstChild) {
-        target.removeChild(firstChild);
-      }
-    }
-    target.appendChild(renderer.domElement);
-  }
-  return renderer;
-};
-
-// 시점 생성
-const createCamera = () => {
-  const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-  camera.position.z = 5;
-  return camera;
-};
-
-// 정육면체 생성
+// 육면체 생성
 const createCube = ({
   scene,
   color,
-  coordinate,
+  width,
+  height,
+  depth,
 }: {
   scene: THREE.Scene;
   color: string;
-  coordinate: [number, number, number];
+  width: number;
+  height: number;
+  depth: number;
 }) => {
-  const geometry = new THREE.BoxGeometry(...coordinate);
+  const geometry = new THREE.BoxGeometry(width, height, depth);
   const material = new THREE.MeshStandardMaterial({ color: color });
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
@@ -142,70 +165,63 @@ const createSphere = ({
   return mesh;
 };
 
-// 컨트롤 생성
-const createControls = ({
-  renderer,
-  camera,
-}: {
-  renderer: THREE.WebGLRenderer;
-  camera: THREE.PerspectiveCamera;
-}) => {
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.minDistance = 1;
-  controls.maxDistance = 500;
-  return controls;
-};
-
-// 애니메이션
-const animation = ({
+// 평면 생성
+const createPlane = ({
   scene,
-  renderer,
-  camera,
-  controls,
-  callback = () => {},
-}: {
-  scene: THREE.Scene;
-  renderer: THREE.WebGLRenderer;
-  camera: THREE.PerspectiveCamera;
-  controls?: OrbitControls;
-  callback?: () => void;
-}) => {
-  requestAnimationFrame(() =>
-    animation({ scene, renderer, camera, controls, callback })
-  );
-  const speed = 0.005;
-  if (controls) {
-    controls.update();
-  }
-  renderer.render(scene, camera);
-  callback();
-};
-
-export const renderCube = ({
-  id,
+  color,
   width,
   height,
 }: {
-  id: string;
+  scene: THREE.Scene;
+  color: string;
   width: number;
   height: number;
 }) => {
-  const scene = new THREE.Scene();
-  const renderer = createRenderer({
+  const geometry = new THREE.PlaneGeometry(width, height);
+  const material = new THREE.MeshStandardMaterial({ color: color });
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+  return mesh;
+};
+
+// 이십면체 생성
+const createIcosahedron = ({
+  scene,
+  color,
+  radius,
+}: {
+  scene: THREE.Scene;
+  color: string;
+  radius: number;
+}) => {
+  const geometry = new THREE.IcosahedronGeometry(radius);
+  const material = new THREE.MeshStandardMaterial({ color: color });
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+  return mesh;
+};
+
+// 정육면체 렌더링
+export const renderCube = ({ id, width, height }: Props) => {
+  const { scene, renderer, camera, controls } = generate({
     id,
     width,
     height,
   });
-  const camera = createCamera();
-  const mesh = createCube({ scene, color: '#00ff80', coordinate: [1, 1, 1] });
-  const controls = createControls({ renderer, camera });
+  const mesh = createCube({
+    scene,
+    color: '#00ff80',
+    width: 1,
+    height: 1,
+    depth: 1,
+  });
 
-  addAmbientLight({
+  createAmbientLight({
     scene,
     color: '#ffffff',
     intensity: 1,
   });
-  addDirectionalLight({
+  createDirectionalLight({
     scene,
     color: '#ffffff',
     intensity: 2,
@@ -213,7 +229,7 @@ export const renderCube = ({
     y: 2,
     z: 3,
   });
-  addDirectionalLight({
+  createDirectionalLight({
     scene,
     color: '#ffffff',
     intensity: 3,
@@ -222,7 +238,7 @@ export const renderCube = ({
     z: -3,
   });
 
-  animation({
+  animate({
     scene,
     renderer,
     camera,
@@ -235,35 +251,25 @@ export const renderCube = ({
   });
 };
 
-export const renderSphere = ({
-  id,
-  width,
-  height,
-}: {
-  id: string;
-  width: number;
-  height: number;
-}) => {
-  const scene = new THREE.Scene();
-  const renderer = createRenderer({
+// 구 렌더링
+export const renderSphere = ({ id, width, height }: Props) => {
+  const { scene, renderer, camera, controls } = generate({
     id,
     width,
     height,
   });
-  const camera = createCamera();
   const mesh = createSphere({
     scene,
     color: '#00ff80',
     radius: 1,
   });
-  const controls = createControls({ renderer, camera });
 
-  addAmbientLight({
+  createAmbientLight({
     scene,
     color: '#ffffff',
     intensity: 0.3,
   });
-  const spotLight = addSpotLight({
+  const spotLight = createSpotLight({
     scene,
     color: '#ffffff',
     intensity: 100,
@@ -272,7 +278,7 @@ export const renderSphere = ({
     z: 5,
   });
 
-  animation({
+  animate({
     scene,
     renderer,
     camera,
@@ -281,6 +287,95 @@ export const renderSphere = ({
       const speed = Date.now() / 1000;
       spotLight.position.x = 5 * Math.sin(speed);
       spotLight.position.z = 5 * Math.cos(speed);
+    },
+  });
+};
+
+// 평면 렌더링
+export const renderPlane = ({ id, width, height }: Props) => {
+  const { scene, renderer, camera, controls } = generate({
+    id,
+    width,
+    height,
+  });
+  const mesh = createPlane({
+    scene,
+    color: '#00ff80',
+    width: 2,
+    height: 2,
+  });
+
+  createAmbientLight({
+    scene,
+    color: '#ffffff',
+    intensity: 0.3,
+  });
+  const spotLight = createSpotLight({
+    scene,
+    color: '#ffffff',
+    intensity: 20,
+    x: 0,
+    y: 0,
+    z: 2,
+  });
+
+  animate({
+    scene,
+    renderer,
+    camera,
+    controls,
+    callback: () => {
+      const speed = Date.now() / 1000;
+      spotLight.position.x = 2 * Math.sin(speed);
+      spotLight.position.y = 2 * Math.cos(speed);
+    },
+  });
+};
+
+// 정이십면체 렌더링
+export const renderIcosahedron = ({ id, width, height }: Props) => {
+  const { scene, renderer, camera, controls } = generate({
+    id,
+    width,
+    height,
+  });
+  const mesh = createIcosahedron({
+    scene,
+    color: '#00ff80',
+    radius: 1,
+  });
+
+  createAmbientLight({
+    scene,
+    color: '#ffffff',
+    intensity: 0.3,
+  });
+  createDirectionalLight({
+    scene,
+    color: '#ffffff',
+    intensity: 2,
+    x: 1,
+    y: 2,
+    z: 3,
+  });
+  createDirectionalLight({
+    scene,
+    color: '#ffffff',
+    intensity: 3,
+    x: -1,
+    y: -2,
+    z: -3,
+  });
+
+  animate({
+    scene,
+    renderer,
+    camera,
+    controls,
+    callback: () => {
+      const speed = 0.005;
+      mesh.rotation.x += speed;
+      mesh.rotation.y += speed;
     },
   });
 };
