@@ -156,6 +156,30 @@ const createControls = ({
   return controls;
 };
 
+const animate = ({
+  scene,
+  renderer,
+  camera,
+  controls,
+  callback = () => {},
+}: {
+  scene: THREE.Scene;
+  renderer: THREE.WebGLRenderer;
+  camera: THREE.PerspectiveCamera;
+  controls?: OrbitControls;
+  callback?: () => void;
+}) => {
+  requestAnimationFrame(() =>
+    animate({ scene, renderer, camera, controls, callback })
+  );
+  const speed = 0.005;
+  if (controls) {
+    controls.update();
+  }
+  renderer.render(scene, camera);
+  callback();
+};
+
 export const renderCube = ({
   id,
   width,
@@ -197,15 +221,17 @@ export const renderCube = ({
     z: -3,
   });
 
-  const animate = () => {
-    requestAnimationFrame(animate);
-    const speed = 0.005;
-    mesh.rotation.x += speed;
-    mesh.rotation.y += speed;
-    controls.update();
-    renderer.render(scene, camera);
-  };
-  animate();
+  animate({
+    scene,
+    renderer,
+    camera,
+    controls,
+    callback: () => {
+      const speed = 0.005;
+      mesh.rotation.x += speed;
+      mesh.rotation.y += speed;
+    },
+  });
 };
 
 export const renderSphere = ({
@@ -245,13 +271,15 @@ export const renderSphere = ({
     z: 5,
   });
 
-  const animate = () => {
-    requestAnimationFrame(animate);
-    const speed = Date.now() / 1000;
-    spotLight.position.x = 5 * Math.sin(speed);
-    spotLight.position.z = 5 * Math.cos(speed);
-    controls.update();
-    renderer.render(scene, camera);
-  };
-  animate();
+  animate({
+    scene,
+    renderer,
+    camera,
+    controls,
+    callback: () => {
+      const speed = Date.now() / 1000;
+      spotLight.position.x = 5 * Math.sin(speed);
+      spotLight.position.z = 5 * Math.cos(speed);
+    },
+  });
 };
